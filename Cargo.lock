@@ -1220,6 +1220,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "tar"
+version = "0.4.44"
+dependencies = [
+ "filetime",
+ "libc",
+ "xattr",
+]
+
+[[package]]
 name = "tempfile"
 version = "3.23.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

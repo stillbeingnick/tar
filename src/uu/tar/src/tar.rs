@@ -72,7 +72,6 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     ))
 }
 
-#[allow(clippy::cognitive_complexity)]
 pub fn uu_app() -> Command {
     Command::new(uucore::util_name())
         .version(crate_version!())
@@ -101,7 +100,10 @@ pub fn uu_app() -> Command {
             // arg!(-p --"preserve-permissions" "Extract information about file permissions"),
             // arg!(-P --"absolute-names" "Don't strip leading '/' from file names"),
             // Help
-            arg!(--help "Print help information").action(ArgAction::Help),
+            Arg::new("help")
+                .long("help")
+                .help("Print help information")
+                .action(ArgAction::Help),
             // Files to process
             arg!([files]... "Files to archive or extract")
                 .action(ArgAction::Append)
