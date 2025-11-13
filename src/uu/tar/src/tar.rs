@@ -20,7 +20,6 @@ const BLOCK_SIZE: usize = 512;
 
 #[uucore::main]
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-
     // Collect args - the test framework may add util_name as args[1], so skip it if present
     let args_vec: Vec<_> = args.collect();
     let util_name = uucore::util_name();
@@ -190,6 +189,7 @@ pub fn uu_app() -> Command {
             arg!(-h --dereference "Follow symlinks"),
             // custom long help
             Arg::new("help").long("help").action(ArgAction::Help),
+
             // arg macro has an issue with the '-' in the middle of the long args
             Arg::new("preserve-permissions")
                 .short('p')
