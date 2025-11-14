@@ -195,7 +195,6 @@ pub fn uu_app() -> Command {
             arg!(-h --dereference "Follow symlinks"),
             // custom long help
             Arg::new("help").long("help").action(ArgAction::Help),
-
             // arg macro has an issue with the '-' in the middle of the long args
             Arg::new("preserve-permissions")
                 .short('p')
