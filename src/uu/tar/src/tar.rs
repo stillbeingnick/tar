@@ -20,20 +20,21 @@ const BLOCK_SIZE: usize = 512;
 
 #[uucore::main]
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-    // Collect args - the test framework may add util_name as args[1], so skip it if present
-    let args_vec: Vec<_> = args.collect();
-    let util_name = uucore::util_name();
+    // // Collect args - the test framework may add util_name as args[1], so skip it if present
+    // let args_vec: Vec<_> = args.collect();
+    // let util_name = uucore::util_name();
+    //
+    // // Skip duplicate util name if present (can be "tar" or "tarapp")
+    // let args_to_parse = if args_vec.len() > 1
+    //     && (args_vec[1] == util_name || args_vec[1] == "tar" || args_vec[1] == "tarapp")
+    // {
+    //     let mut result = vec![args_vec[0].clone()];
+    //     result.extend_from_slice(&args_vec[2..]);
+    //     result
+    // } else {
+    //     args_vec
+    // };
 
-    // Skip duplicate util name if present (can be "tar" or "tarapp")
-    let args_to_parse = if args_vec.len() > 1
-        && (args_vec[1] == util_name || args_vec[1] == "tar" || args_vec[1] == "tarapp")
-    {
-        let mut result = vec![args_vec[0].clone()];
-        result.extend_from_slice(&args_vec[2..]);
-        result
-    } else {
-        args_vec
-    };
 
     // get command line args and handle some errors.
     let matches =
@@ -63,6 +64,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     // execute selected operation and pass parsed [`TarParams`]
     op.exec(&params)
 }
+
 #[allow(clippy::cognitive_complexity)]
 pub fn uu_app() -> Command {
     // OperationKind mirrors the tar "Main Operation Modes" for clap each of these
@@ -206,35 +208,3 @@ pub fn uu_app() -> Command {
                 .action(clap::ArgAction::SetTrue),
         ])
 }
-
-// #[allow(clippy::cognitive_complexity)]
-// pub fn uu_app() -> Command {
-//     Command::new(uucore::util_name())
-//         .version(crate_version!())
-//         .about(ABOUT)
-//         .override_usage(format_usage(USAGE))
-//         .infer_long_args(true)
-//         .disable_help_flag(true)
-//         .args([
-//             // Main operation modes
-//             arg!(-c --create "Create a new archive"),
-//             arg!(-x --extract "Extract files from archive").alias("get"),
-//             // Archive file
-//             arg!(-f --file <ARCHIVE> "Use archive file or device ARCHIVE")
-//                 .value_parser(clap::value_parser!(PathBuf))
-//                 .required(false),
-//             // Common options
-//             arg!(-v --verbose "Verbosely list files processed"),
-//             // Help
-//             Arg::new("help")
-//                 .long("help")
-//                 .help("Print help information")
-//                 .action(ArgAction::Help),
-//             // Files to process
-//             Arg::new("files")
-//                 .help("Files to archive or extract")
-//                 .action(ArgAction::Append)
-//                 .value_parser(clap::value_parser!(PathBuf))
-//                 .num_args(0..),
-//         ])
-// }
