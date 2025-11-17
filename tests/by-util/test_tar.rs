@@ -187,3 +187,58 @@ fn test_list_archive_verbose() {
     assert_eq!(file_names, list_files);
 
 }
+
+#[test]
+fn test_append() {
+    let (at, mut ucmd) = at_and_ucmd!();
+
+    let file_names = vec!["file1.txt".to_string(), "file2.txt".to_string(), "file3.txt".to_string()];
+
+    // Create an archive with multiple files
+    at.write(&file_names[0], "content1");
+    at.write(&file_names[1], "content2");
+    ucmd.args(&["-cf", "archive.tar", "file1.txt", "file2.txt"])
+        .succeeds();
+
+    // Remove originals
+    at.remove(&file_names[0]);
+    at.remove(&file_names[1]);
+
+    // Append
+    let append_res = new_ucmd!()
+        .arg("-rvf")
+        .arg(at.plus("archive.tar"))
+        .current_dir(at.as_string())
+        .succeeds();
+
+    // list and check for appended file
+
+    let res = new_ucmd!()
+        .arg("-tvf")
+        .arg(at.plus("archive.tar"))
+        .current_dir(at.as_string())
+        .succeeds();
+
+    let mut list_files = vec![];
+
+    for line in res.stdout_str().lines(){
+        if !line.is_empty(){ 
+            // rev, trim till whilespace, collect, split, rev(again), collect
+            // to flip since file name is variable grab the last string in the
+            // stdout line
+            let file_name = line
+                .to_string()
+                .chars()
+                .rev()
+                .take_while(|x| !x.is_whitespace())
+                .collect::<String>()
+                .chars()
+                .rev()
+                .collect::<String>();
+            list_files.push(file_name);
+        }
+    }
+
+    assert_eq!(file_names, list_files);
+
+}

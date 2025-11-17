@@ -2,6 +2,7 @@ use crate::errors::TarError;
 use crate::operations::Create;
 use crate::operations::Extract;
 use crate::operations::List;
+use crate::operations::Append;
 use crate::options::TarParams;
 use uucore::error::UResult;
 
@@ -43,7 +44,7 @@ impl TarOperation for OperationKind {
             Self::List => List.exec(options),
             Self::Create => Create.exec(options),
             Self::Diff => unimplemented!(),
-            Self::Append => unimplemented!(),
+            Self::Append => Append.exec(options),
             Self::Update => unimplemented!(),
             Self::Extract => Extract.exec(options),
             Self::Concatenate => unimplemented!(),
