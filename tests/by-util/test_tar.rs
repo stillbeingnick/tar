@@ -197,6 +197,7 @@ fn test_append() {
     // Create an archive with multiple files
     at.write(&file_names[0], "content1");
     at.write(&file_names[1], "content2");
+    at.write(&file_names[2], "content3");
     ucmd.args(&["-cf", "archive.tar", "file1.txt", "file2.txt"])
         .succeeds();
 
@@ -208,6 +209,7 @@ fn test_append() {
     let append_res = new_ucmd!()
         .arg("-rvf")
         .arg(at.plus("archive.tar"))
+        .arg(&file_names[2])
         .current_dir(at.as_string())
         .succeeds();
 
