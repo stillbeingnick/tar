@@ -1,8 +1,8 @@
 use crate::errors::TarError;
+use crate::operations::Append;
 use crate::operations::Create;
 use crate::operations::Extract;
 use crate::operations::List;
-use crate::operations::Append;
 use crate::options::TarParams;
 use uucore::error::UResult;
 
