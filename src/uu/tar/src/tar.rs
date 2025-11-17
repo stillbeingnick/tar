@@ -20,7 +20,6 @@ const BLOCK_SIZE: usize = 512;
 
 #[uucore::main]
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {
-
     // Collect args - the test framework may add util_name as args[1], so skip it if present
     let args_vec: Vec<_> = args.collect();
     let util_name = uucore::util_name();
@@ -50,7 +49,8 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
                         1,
                         format!(
                             "option requires an argument {}",
-                            e.get(clap::error::ContextKind::InvalidArg).expect("No argument") 
+                            e.get(clap::error::ContextKind::InvalidArg)
+                                .expect("No argument")
                         ),
                     ));
                 }

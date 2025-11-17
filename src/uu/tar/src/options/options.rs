@@ -78,6 +78,14 @@ impl TarParams {
             )))
         }
     }
+    /// Convinence method to check if the current execution of tar has the verbose flag
+    /// passed in. Since checking for this flag is very common this makes it very easy to
+    /// cut through some boiler plate.
+    pub fn is_verbose(&self) -> bool {
+        self.options()
+            .iter()
+            .any(|x| matches!(x, TarOption::Verbose))
+    }
 }
 
 #[allow(dead_code)]

@@ -166,8 +166,8 @@ fn test_list_archive_verbose() {
 
     let mut list_files = vec![];
 
-    for line in res.stdout_str().lines(){
-        if !line.is_empty(){ 
+    for line in res.stdout_str().lines() {
+        if !line.is_empty() {
             // rev, trim till whilespace, collect, split, rev(again), collect
             // to flip since file name is variable grab the last string in the
             // stdout line
@@ -185,14 +185,17 @@ fn test_list_archive_verbose() {
     }
 
     assert_eq!(file_names, list_files);
-
 }
 
 #[test]
 fn test_append() {
     let (at, mut ucmd) = at_and_ucmd!();
 
-    let file_names = vec!["file1.txt".to_string(), "file2.txt".to_string(), "file3.txt".to_string()];
+    let file_names = vec![
+        "file1.txt".to_string(),
+        "file2.txt".to_string(),
+        "file3.txt".to_string(),
+    ];
 
     // Create an archive with multiple files
     at.write(&file_names[0], "content1");
@@ -206,7 +209,7 @@ fn test_append() {
     at.remove(&file_names[1]);
 
     // Append
-    let append_res = new_ucmd!()
+    new_ucmd!()
         .arg("-rvf")
         .arg(at.plus("archive.tar"))
         .arg(&file_names[2])
@@ -214,7 +217,6 @@ fn test_append() {
         .succeeds();
 
     // list and check for appended file
-
     let res = new_ucmd!()
         .arg("-tvf")
         .arg(at.plus("archive.tar"))
@@ -223,8 +225,8 @@ fn test_append() {
 
     let mut list_files = vec![];
 
-    for line in res.stdout_str().lines(){
-        if !line.is_empty(){ 
+    for line in res.stdout_str().lines() {
+        if !line.is_empty() {
             // rev, trim till whilespace, collect, split, rev(again), collect
             // to flip since file name is variable grab the last string in the
             // stdout line
@@ -242,5 +244,4 @@ fn test_append() {
     }
 
     assert_eq!(file_names, list_files);
-
 }
