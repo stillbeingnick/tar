@@ -131,7 +131,7 @@ pub fn uu_app() -> Command {
                 .long_flag("append")
                 .arg(
                     Arg::new("files")
-                        .help("Files to archive or extract")
+                        .help("Files to append to the end of an archive")
                         .value_parser(clap::value_parser!(PathBuf))
                         .num_args(0..)
                         .required(true)
