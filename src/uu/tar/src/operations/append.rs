@@ -1,21 +1,82 @@
 use crate::operations::TarOperation;
 use crate::options::TarParams;
 use std::fs::{File, OpenOptions};
-use std::io::{Seek, SeekFrom};
-use tar::Builder;
-use uucore::error::UResult;
+use std::io::{Read, Seek, SeekFrom};
+use tar::{Archive, Builder};
+use uucore::error::{UResult, USimpleError};
 
+/// Appends a single file or a list of files to the end of an archive
+///
+/// Arguments passed through the command line will influence how the
+/// archive is appended. Both entire directories and individual files
+/// can be appended in a single operation of tar.
+///
+/// # Append Vs. Update
+///
+/// While seeming to do the same thing Append and Update have two different
+/// purposes.
+///
+/// Appending will always append the requested file to an archive, while 
+/// update will only append the requested file to an archive if that 
+/// file has been modifed after the recorded modified date of that same
+/// file in the archive.
+///
+/// # Compression
+///
+/// It is not possible to append a file to a compressed archive without
+/// first decompressing it.
+///
+/// So the order of operations for appending a file to a compressed archive is:
+///     Decompression -> Append File -> Recompress
+///
 pub struct Append;
 
 impl TarOperation for Append {
     fn exec(&self, params: &TarParams) -> UResult<()> {
         // NOTE: might have to seek reader to end of entries
         // Then write the entry
-        let f = OpenOptions::new().write(true).open(params.archive())?;
-        let mut builder = Builder::new(f);
+        let (archive, end_pos) = if let Ok(f) = OpenOptions::new()
+            .write(true)
+            .read(true)
+            .open(params.archive())
+        {
+            // create archive
+            let mut archive = Archive::new(f);
+            // attempt to open archive entries and go to the last entry
+            // .last() runs the iterator till None so tar-rs's odd way of 
+            // creating the iterator using Read/Write is ok
+            let pos = if let Some(Ok(last_entry)) = archive.entries()?.last() {
+                let block_size: u64 = params
+                    .block_size()
+                    .try_into()
+                    .map_err(|x| USimpleError::new(1, format!("{:?}", x)))?;
+
+                // align to block size boundry
+                if (last_entry.size() % block_size) == 0 {
+                    last_entry.size() + block_size + last_entry.raw_header_position()
+                } else {
+                    block_size - (last_entry.size() % block_size)
+                        + last_entry.size()
+                        + block_size
+                        + last_entry.raw_header_position()
+                }
+            } else {
+                // if there is no last entry, which would mean there are no entries
+                params
+                    .block_size()
+                    .try_into()
+                    .map_err(|x| USimpleError::new(1, format!("{}", x)))?
+            };
+            (archive, pos)
+        } else {
+            return Err(USimpleError::new(1, "Could not open requested archive"));
+        };
+
+        // NOTE: what does tar do if you try to append to an empty archive?
+        let mut builder = Builder::new(archive.into_inner());
 
         // seek to end minus 2 blocks for empty
-        builder.get_mut().seek(SeekFrom::End(-1024))?;
+        builder.get_mut().seek(SeekFrom::Start(end_pos))?;
 
         for file in params.files() {
             let mut ff = File::open(file)?;
@@ -28,7 +89,6 @@ impl TarOperation for Append {
                 }
             }
         }
-
         Ok(())
     }
 }

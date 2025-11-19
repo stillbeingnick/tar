@@ -108,6 +108,9 @@ impl TarParams {
     pub fn options_mut(&mut self) -> &mut Vec<TarOption> {
         &mut self.options
     }
+    pub fn block_size(&self) -> usize {
+        self.block_size
+    }
 }
 
 /// [`TarOption`] Enum of avaliable tar options for later use
