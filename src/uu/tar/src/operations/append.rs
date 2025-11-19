@@ -1,5 +1,6 @@
 use crate::operations::TarOperation;
 use crate::options::TarParams;
+use std::path::PathBuf;
 use std::fs::{File, OpenOptions};
 use std::io::{Seek, SeekFrom};
 use tar::{Archive, Builder};
@@ -33,12 +34,30 @@ pub(crate) struct Append;
 
 impl TarOperation for Append {
     fn exec(&self, params: &TarParams) -> UResult<()> {
+        let block_size = params.block_size().try_into().map_err(|x| USimpleError::new(1, format!("Invalid block size: {}", x)))?;
+        let files_appended = Append::append_files_to_archive(
+            params.archive(),
+            block_size,
+            params.files()
+        )?;
+        // print file names during append
+        if params.is_verbose(){
+            for file_name in files_appended {
+                println!("{}", file_name.as_str());
+            }
+        }
+        Ok(())
+    }
+}
+
+impl Append {
+    pub(crate) fn append_files_to_archive(archive_path: &PathBuf, block_size: u64, files: &[PathBuf]) -> UResult<Vec<String>> { 
         // NOTE: might have to seek reader to end of entries
         // Then write the entry
         let (archive, end_pos) = if let Ok(f) = OpenOptions::new()
             .write(true)
             .read(true)
-            .open(params.archive())
+            .open(archive_path)
         {
             // create archive
             let mut archive = Archive::new(f);
@@ -46,10 +65,6 @@ impl TarOperation for Append {
             // .last() runs the iterator till None so tar-rs's odd way of 
             // creating the iterator using Read/Write is ok
             let pos = if let Some(Ok(last_entry)) = archive.entries()?.last() {
-                let block_size: u64 = params
-                    .block_size()
-                    .try_into()
-                    .map_err(|x| USimpleError::new(1, format!("{:?}", x)))?;
 
                 // align to block size boundry
                 if (last_entry.size() % block_size) == 0 {
@@ -62,10 +77,7 @@ impl TarOperation for Append {
                 }
             } else {
                 // if there is no last entry, which would mean there are no entries
-                params
-                    .block_size()
-                    .try_into()
-                    .map_err(|x| USimpleError::new(1, format!("{}", x)))?
+                0
             };
             (archive, pos)
         } else {
@@ -77,18 +89,13 @@ impl TarOperation for Append {
 
         // seek to end minus 2 blocks for empty
         builder.get_mut().seek(SeekFrom::Start(end_pos))?;
-
-        for file in params.files() {
+       
+        let mut files_appended: Vec<String> = Vec::new();
+        for file in files {
             let mut ff = File::open(file)?;
             builder.append_file(file, &mut ff)?;
-
-            // print file names during append
-            if params.is_verbose() {
-                if let Some(p) = file.to_str() {
-                    println!("{}", p);
-                }
-            }
+            files_appended.push(file.to_string_lossy().to_string());
         }
-        Ok(())
+        Ok(files_appended)
     }
 }
