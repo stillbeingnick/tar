@@ -34,9 +34,15 @@ pub(crate) struct Append;
 
 impl TarOperation for Append {
     fn exec(&self, params: &TarParams) -> UResult<()> {
+        let archive = Archive::new(OpenOptions::new()
+            .write(true)
+            .read(true)
+            .open(params.archive())?
+        );
+
         let block_size = params.block_size().try_into().map_err(|x| USimpleError::new(1, format!("Invalid block size: {}", x)))?;
         let files_appended = Append::append_files_to_archive(
-            params.archive(),
+            archive,
             block_size,
             params.files()
         )?;
@@ -51,40 +57,24 @@ impl TarOperation for Append {
 }
 
 impl Append {
-    pub(crate) fn append_files_to_archive(archive_path: &PathBuf, block_size: u64, files: &[PathBuf]) -> UResult<Vec<String>> { 
-        // NOTE: might have to seek reader to end of entries
-        // Then write the entry
-        let (archive, end_pos) = if let Ok(f) = OpenOptions::new()
-            .write(true)
-            .read(true)
-            .open(archive_path)
-        {
-            // create archive
-            let mut archive = Archive::new(f);
-            // attempt to open archive entries and go to the last entry
-            // .last() runs the iterator till None so tar-rs's odd way of 
-            // creating the iterator using Read/Write is ok
-            let pos = if let Some(Ok(last_entry)) = archive.entries()?.last() {
-
-                // align to block size boundry
-                if (last_entry.size() % block_size) == 0 {
-                    last_entry.size() + block_size + last_entry.raw_header_position()
-                } else {
-                    block_size - (last_entry.size() % block_size)
-                        + last_entry.size()
-                        + block_size
-                        + last_entry.raw_header_position()
-                }
+    pub(crate) fn append_files_to_archive(mut archive: Archive<File>, block_size: u64, files: &[PathBuf]) -> UResult<Vec<String>> { 
+        // attempt to open archive entries and go to the last entry
+        // .last() runs the iterator till None so tar-rs's odd way of 
+        // creating the iterator using Read/Write is ok
+        let end_pos = if let Some(Ok(last_entry)) = archive.entries()?.last() {
+            // align to block size boundry
+            if (last_entry.size() % block_size) == 0 {
+                last_entry.size() + block_size + last_entry.raw_header_position()
             } else {
-                // if there is no last entry, which would mean there are no entries
-                0
-            };
-            (archive, pos)
+                block_size - (last_entry.size() % block_size)
+                    + last_entry.size()
+                    + block_size
+                    + last_entry.raw_header_position()
+            }
         } else {
-            return Err(USimpleError::new(1, "Could not open requested archive"));
+            // if there is no last entry, which would mean there are no entries
+            0
         };
-
-        // NOTE: what does tar do if you try to append to an empty archive?
         let mut builder = Builder::new(archive.into_inner());
 
         // seek to end minus 2 blocks for empty

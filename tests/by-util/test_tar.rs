@@ -245,3 +245,68 @@ fn test_append() {
 
     assert_eq!(file_names, list_files);
 }
+
+#[test]
+fn test_update() {
+    let (at, mut ucmd) = at_and_ucmd!();
+
+    let file_names = vec![
+        "file1.txt".to_string(),
+        "file2.txt".to_string(),
+    ];
+
+    // Create an archive with multiple files
+    at.write(&file_names[0], "content1");
+    at.write(&file_names[1], "content2");
+    ucmd.args(&["-cf", "archive.tar", "file1.txt", "file2.txt"])
+        .succeeds();
+
+    // update file 2
+    at.write(&file_names[1], "content2 updated");
+    
+    // list should now contain file 2 twice
+    let mut checked_names = Vec::new();
+    checked_names.extend_from_slice(&file_names); 
+    checked_names.push(file_names[1].clone());
+
+    // Update
+    new_ucmd!()
+        .arg("-uvf")
+        .arg(at.plus("archive.tar"))
+        .args(&file_names)
+        .current_dir(at.as_string())
+        .succeeds();
+
+    // list and check for appended file
+    let res = new_ucmd!()
+        .arg("-tvf")
+        .arg(at.plus("archive.tar"))
+        .current_dir(at.as_string())
+        .succeeds();
+
+    let mut list_files = vec![];
+
+    for line in res.stdout_str().lines() {
+        if !line.is_empty() {
+            // rev, trim till whilespace, collect, split, rev(again), collect
+            // to flip since file name is variable grab the last string in the
+            // stdout line
+            let file_name = line
+                .to_string()
+                .chars()
+                .rev()
+                .take_while(|x| !x.is_whitespace())
+                .collect::<String>()
+                .chars()
+                .rev()
+                .collect::<String>();
+            list_files.push(file_name);
+        }
+    }
+
+    // Remove originals
+    at.remove(&file_names[0]);
+    at.remove(&file_names[1]);
+
+    assert_eq!(checked_names, list_files);
+}
