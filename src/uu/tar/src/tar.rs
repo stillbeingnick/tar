@@ -61,7 +61,7 @@ pub fn uumain(args: impl uucore::Args) -> UResult<()> {
     // get the selected operation function pointer
     let (op, params) = TarParams::with_operation(&matches)?;
 
-    // execute selected operation and pass parsed [`TarParams`]
+    // execute selected operation and pass parsed TarParams
     op.exec(&params)
 }
 
