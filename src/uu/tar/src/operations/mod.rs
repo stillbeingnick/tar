@@ -4,12 +4,14 @@
 // file that was distributed with this source code.
 //
 pub mod append;
+pub mod update;
 pub mod create;
 pub mod extract;
 pub mod list;
 pub mod operation;
 
 pub(crate) use self::append::Append;
+pub(crate) use self::update::Update;
 pub(crate) use self::create::Create;
 pub(crate) use self::extract::Extract;
 pub(crate) use self::list::List;

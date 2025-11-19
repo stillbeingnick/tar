@@ -1,7 +1,7 @@
 use crate::operations::TarOperation;
 use crate::options::TarParams;
 use std::fs::{File, OpenOptions};
-use std::io::{Read, Seek, SeekFrom};
+use std::io::{Seek, SeekFrom};
 use tar::{Archive, Builder};
 use uucore::error::{UResult, USimpleError};
 
@@ -29,7 +29,7 @@ use uucore::error::{UResult, USimpleError};
 /// So the order of operations for appending a file to a compressed archive is:
 ///     Decompression -> Append File -> Recompress
 ///
-pub struct Append;
+pub(crate) struct Append;
 
 impl TarOperation for Append {
     fn exec(&self, params: &TarParams) -> UResult<()> {
