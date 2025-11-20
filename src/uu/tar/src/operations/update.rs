@@ -12,6 +12,9 @@ use uucore::error::{UResult, USimpleError};
 
 pub(crate) struct Update;
 
+// TODO: tar(gnu) creates archives on update if the archive doesn't
+// exist
+
 impl TarOperation for Update {
     fn exec(&self, params: &TarParams) -> UResult<()> {
         let mut archive = Archive::new(OpenOptions::new()

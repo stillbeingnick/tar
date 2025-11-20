@@ -32,6 +32,8 @@ use uucore::error::{UResult, USimpleError};
 ///
 pub(crate) struct Append;
 
+// TODO: tar(gnu) creates an archive if the archive doesnt exist when append is called
+
 impl TarOperation for Append {
     fn exec(&self, params: &TarParams) -> UResult<()> {
         let archive = Archive::new(OpenOptions::new()
