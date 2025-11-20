@@ -3,6 +3,8 @@
 // For the full copyright and license information, please view the LICENSE
 // file that was distributed with this source code.
 
+use std::{thread::sleep, time::Duration};
+
 use uutests::{at_and_ucmd, new_ucmd, util::TerminalSimulation};
 
 // Basic CLI Tests
@@ -261,21 +263,27 @@ fn test_update() {
     ucmd.args(&["-cf", "archive.tar", "file1.txt", "file2.txt"])
         .succeeds();
 
+    // sleep thread for 1 second to test modified time
+    sleep(Duration::from_secs(1));
+
     // update file 2
-    at.write(&file_names[1], "content2 updated");
+    at.append(&file_names[1], "content2 updated");
     
     // list should now contain file 2 twice
     let mut checked_names = Vec::new();
     checked_names.extend_from_slice(&file_names); 
     checked_names.push(file_names[1].clone());
 
+
     // Update
-    new_ucmd!()
+    let u_res = new_ucmd!()
         .arg("-uvf")
         .arg(at.plus("archive.tar"))
         .args(&file_names)
         .current_dir(at.as_string())
         .succeeds();
+    println!("u_res: {}", u_res.stdout_str());
+
 
     // list and check for appended file
     let res = new_ucmd!()
