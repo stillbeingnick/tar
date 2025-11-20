@@ -16,7 +16,7 @@ use uucore::format_usage;
 
 const ABOUT: &str = "an archiving utility";
 const USAGE: &str = "tar {A|c|d|r|t|u|x}[GnSkUWOmpsMBiajJzZhPlRvwo] -f ARCHIVE [FILES...]";
-const BLOCK_SIZE: usize = 512;
+const BLOCK_SIZE: u64 = 512;
 
 #[uucore::main]
 pub fn uumain(args: impl uucore::Args) -> UResult<()> {

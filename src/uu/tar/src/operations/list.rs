@@ -97,12 +97,12 @@ fn print_entry(entry: tar::Entry<File>, verbose: bool) -> UResult<()> {
 
         // Wrap to jiff timestamps
         let mtime_zoned = Zoned::new(
-            // TODO: More descriptive errors needed
             Timestamp::new(
-                header.mtime()?.try_into().expect("Couldnt convert mtime"),
+                header.mtime()?.try_into()
+                    .map_err(|x| USimpleError::new(1, format!("Invalid header mtime value: {}", x)))?,
                 0,
             )
-            .map_err(|_| USimpleError::new(1, "Invalid mtime timestamp"))?,
+            .map_err(|x| USimpleError::new(1, format!("Jiff timestamp conversion error: {}", x)))?,
             TimeZone::system(),
         );
 

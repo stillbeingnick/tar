@@ -10,7 +10,6 @@ use uucore::error::UResult;
 /// tar.
 #[allow(dead_code)]
 pub struct TarParams {
-    block_size: usize,
     archive: PathBuf,
     files: Vec<PathBuf>,
     options: Vec<TarOption>,
@@ -22,7 +21,6 @@ pub struct TarParams {
 impl Default for TarParams {
     fn default() -> TarParams {
         Self {
-            block_size: BLOCK_SIZE,
             archive: PathBuf::default(),
             options: Vec::new(),
             files: Vec::new(),
@@ -54,6 +52,11 @@ impl From<&ArgMatches> for TarParams {
                 "archive" => {
                     if let Some(a) = matches.get_one::<PathBuf>(i.as_str()) {
                         ops.archive = a.to_owned();
+                    }
+                }
+                "blocking-factor" => {
+                    if let Some(a) = matches.get_one::<u32>(i.as_str()) {
+                        ops.options_mut().push(TarOption::BlockingFactor(*a))
                     }
                 }
                 _ => {}
@@ -108,9 +111,6 @@ impl TarParams {
     pub fn options_mut(&mut self) -> &mut Vec<TarOption> {
         &mut self.options
     }
-    pub fn block_size(&self) -> usize {
-        self.block_size
-    }
 }
 
 /// [`TarOption`] Enum of avaliable tar options for later use
@@ -123,4 +123,5 @@ pub enum TarOption {
     Anchored,
     AtimePreserve { arg: String },
     Verbose,
+    BlockingFactor(u32)
 }

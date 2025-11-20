@@ -1,3 +1,4 @@
+use crate::BLOCK_SIZE;
 use crate::operations::TarOperation;
 use crate::options::TarParams;
 use std::path::PathBuf;
@@ -45,10 +46,8 @@ impl TarOperation for Append {
                 .open(params.archive())?
         );
             
-        let block_size = params.block_size().try_into().map_err(|x| USimpleError::new(1, format!("Invalid block size: {}", x)))?;
         let files_appended = Append::append_files_to_archive(
             archive,
-            block_size,
             params.files()
         )?;
         // print file names during append
@@ -63,18 +62,18 @@ impl TarOperation for Append {
 
 impl Append {
     // TODO: update to include dirs and all files
-    pub(crate) fn append_files_to_archive(mut archive: Archive<File>, block_size: u64, files: &[PathBuf]) -> UResult<Vec<String>> { 
+    pub(crate) fn append_files_to_archive(mut archive: Archive<File>, files: &[PathBuf]) -> UResult<Vec<String>> { 
         // attempt to open archive entries and go to the last entry
         // .last() runs the iterator till None so tar-rs's odd way of 
         // creating the iterator using Read/Write is ok
         let end_pos = if let Some(Ok(last_entry)) = archive.entries()?.last() {
             // align to block size boundry
-            if (last_entry.size() % block_size) == 0 {
-                last_entry.size() + block_size + last_entry.raw_header_position()
+            if (last_entry.size() % BLOCK_SIZE) == 0 {
+                last_entry.size() + BLOCK_SIZE + last_entry.raw_header_position()
             } else {
-                block_size - (last_entry.size() % block_size)
+                BLOCK_SIZE - (last_entry.size() % BLOCK_SIZE)
                     + last_entry.size()
-                    + block_size
+                    + BLOCK_SIZE
                     + last_entry.raw_header_position()
             }
         } else {

@@ -56,8 +56,6 @@ impl TarOperation for Update {
                 .open(params.archive())?
         );
 
-        let block_size = params.block_size().try_into().map_err(|x| USimpleError::new(1, format!("Invalid block size: {}", x)))?;
-
         // Wrap up entries and their mod times so they can be retrieved and checked 
         // during selection for appending. This selects the most recent timestamp
         // of the file so there is no erronius appending of files
@@ -103,7 +101,6 @@ impl TarOperation for Update {
 
         let files_appended = Append::append_files_to_archive(
             archive,
-            block_size,
             &files_to_append
         )?;
         // print file names during update
