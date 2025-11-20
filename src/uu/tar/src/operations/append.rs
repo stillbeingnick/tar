@@ -32,16 +32,19 @@ use uucore::error::{UResult, USimpleError};
 ///
 pub(crate) struct Append;
 
-// TODO: tar(gnu) creates an archive if the archive doesnt exist when append is called
-
 impl TarOperation for Append {
     fn exec(&self, params: &TarParams) -> UResult<()> {
-        let archive = Archive::new(OpenOptions::new()
-            .write(true)
-            .read(true)
-            .open(params.archive())?
+        // when an archive is passed in from the command line
+        // during Update or Append a new file is created if the
+        // file path passed in doesn't exist
+        let archive = Archive::new(
+            OpenOptions::new()
+                .write(true)
+                .read(true)
+                .create(true)
+                .open(params.archive())?
         );
-
+            
         let block_size = params.block_size().try_into().map_err(|x| USimpleError::new(1, format!("Invalid block size: {}", x)))?;
         let files_appended = Append::append_files_to_archive(
             archive,
@@ -59,6 +62,7 @@ impl TarOperation for Append {
 }
 
 impl Append {
+    // TODO: update to include dirs and all files
     pub(crate) fn append_files_to_archive(mut archive: Archive<File>, block_size: u64, files: &[PathBuf]) -> UResult<Vec<String>> { 
         // attempt to open archive entries and go to the last entry
         // .last() runs the iterator till None so tar-rs's odd way of 
@@ -88,6 +92,8 @@ impl Append {
             builder.append_file(file, &mut ff)?;
             files_appended.push(file.to_string_lossy().to_string());
         }
+        // finish archive
+        builder.into_inner()?;
         Ok(files_appended)
     }
 }

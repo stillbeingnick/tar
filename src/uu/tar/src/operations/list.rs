@@ -124,18 +124,25 @@ fn print_entry(entry: tar::Entry<File>, verbose: bool) -> UResult<()> {
     Ok(())
 }
 
+// NOTE: this is for the orginial tar header "mode" field 
+// needs to be updated to include ustar/pax/gnu file type
+// flags
 pub fn format_perms(mode: u32) -> String {
     let mut buf = ['-'; 10];
     // check for the directory flag and set to 'd' if present
-    if 1000u32.checked_div(mode).take_if(|x| *x > 0).is_none() {
-        buf[0] = 'd';
+    if let Some(m) = mode.checked_rem(0o1000u32) {
+        // future modes tar may present
+        match m / 0o1000 {
+            1 => { buf[0] = 'd' },
+            _ => {}
+        }
+        let owner = m / 0o100;
+        let group = (m / 0o10) % 0o10;
+        let other = m % 0o10;
+        mode_octal_to_string(owner, &mut buf[1..4]);
+        mode_octal_to_string(group, &mut buf[4..7]);
+        mode_octal_to_string(other, &mut buf[7..]);
     }
-    let owner = mode / 100;
-    let group = (mode / 10) % 10;
-    let other = mode % 10;
-    mode_octal_to_string(owner, &mut buf[1..4]);
-    mode_octal_to_string(group, &mut buf[4..7]);
-    mode_octal_to_string(other, &mut buf[7..]);
     String::from_iter(buf)
 }
 /// Writes to a supplied buffer the char representation of a
