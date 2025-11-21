@@ -5,7 +5,7 @@
 
 use std::{thread::sleep, time::Duration};
 
-use uutests::{at_and_ucmd, new_ucmd, util::TerminalSimulation};
+use uutests::{at_and_ucmd, new_ucmd};
 
 // Basic CLI Tests
 
@@ -252,10 +252,7 @@ fn test_append() {
 fn test_update() {
     let (at, mut ucmd) = at_and_ucmd!();
 
-    let file_names = vec![
-        "file1.txt".to_string(),
-        "file2.txt".to_string(),
-    ];
+    let file_names = vec!["file1.txt".to_string(), "file2.txt".to_string()];
 
     // Create an archive with multiple files
     at.write(&file_names[0], "content1");
@@ -268,12 +265,11 @@ fn test_update() {
 
     // update file 2
     at.append(&file_names[1], "content2 updated");
-    
+
     // list should now contain file 2 twice
     let mut checked_names = Vec::new();
-    checked_names.extend_from_slice(&file_names); 
+    checked_names.extend_from_slice(&file_names);
     checked_names.push(file_names[1].clone());
-
 
     // Update
     let u_res = new_ucmd!()
@@ -283,7 +279,6 @@ fn test_update() {
         .current_dir(at.as_string())
         .succeeds();
     println!("u_res: {}", u_res.stdout_str());
-
 
     // list and check for appended file
     let res = new_ucmd!()

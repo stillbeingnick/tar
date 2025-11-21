@@ -13,7 +13,7 @@ use uucore::error::{UResult, USimpleError};
 /// # Options
 ///
 /// The most common option to use with List is Verbose which changes the
-/// information printed to stdout from just the file name or path to 
+/// information printed to stdout from just the file name or path to
 /// extra header metadata including:
 ///     - file permissions
 ///     - uid/gid
@@ -34,7 +34,7 @@ use uucore::error::{UResult, USimpleError};
 ///
 /// # Impl
 ///
-/// Given the straight forward nature of the [`List`] operation 
+/// Given the straight forward nature of the [`List`] operation
 /// the implmentation just attempts to open the requested archive
 /// provided in the arguments, checks to see if the Verbose flag is
 /// set then iterates through the entries printing them directly to
@@ -98,8 +98,9 @@ fn print_entry(entry: tar::Entry<File>, verbose: bool) -> UResult<()> {
         // Wrap to jiff timestamps
         let mtime_zoned = Zoned::new(
             Timestamp::new(
-                header.mtime()?.try_into()
-                    .map_err(|x| USimpleError::new(1, format!("Invalid header mtime value: {}", x)))?,
+                header.mtime()?.try_into().map_err(|x| {
+                    USimpleError::new(1, format!("Invalid header mtime value: {}", x))
+                })?,
                 0,
             )
             .map_err(|x| USimpleError::new(1, format!("Jiff timestamp conversion error: {}", x)))?,
@@ -124,16 +125,18 @@ fn print_entry(entry: tar::Entry<File>, verbose: bool) -> UResult<()> {
     Ok(())
 }
 
-// NOTE: this is for the orginial tar header "mode" field 
+// NOTE: this is for the orginial tar header "mode" field
 // needs to be updated to include ustar/pax/gnu file type
 // flags
 pub fn format_perms(mode: u32) -> String {
     let mut buf = ['-'; 10];
     // check for the directory flag and set to 'd' if present
+    println!("mode: {:o}", mode);
     if let Some(m) = mode.checked_rem(0o1000u32) {
         // future modes tar may present
         match m / 0o1000 {
-            1 => { buf[0] = 'd' },
+            1 => buf[0] = 'd',
+            2 => buf[0] = 'h',
             _ => {}
         }
         let owner = m / 0o100;

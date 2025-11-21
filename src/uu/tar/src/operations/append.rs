@@ -1,11 +1,11 @@
-use crate::BLOCK_SIZE;
 use crate::operations::TarOperation;
 use crate::options::TarParams;
-use std::path::PathBuf;
+use crate::BLOCK_SIZE;
 use std::fs::{File, OpenOptions};
 use std::io::{Seek, SeekFrom};
+use std::path::PathBuf;
 use tar::{Archive, Builder};
-use uucore::error::{UResult, USimpleError};
+use uucore::error::UResult;
 
 /// Appends a single file or a list of files to the end of an archive
 ///
@@ -18,8 +18,8 @@ use uucore::error::{UResult, USimpleError};
 /// While seeming to do the same thing Append and Update have two different
 /// purposes.
 ///
-/// Appending will always append the requested file to an archive, while 
-/// update will only append the requested file to an archive if that 
+/// Appending will always append the requested file to an archive, while
+/// update will only append the requested file to an archive if that
 /// file has been modifed after the recorded modified date of that same
 /// file in the archive.
 ///
@@ -40,18 +40,15 @@ impl TarOperation for Append {
         // file path passed in doesn't exist
         let archive = Archive::new(
             OpenOptions::new()
-                .write(true)
+                .append(true)
                 .read(true)
                 .create(true)
-                .open(params.archive())?
+                .open(params.archive())?,
         );
-            
-        let files_appended = Append::append_files_to_archive(
-            archive,
-            params.files()
-        )?;
+
+        let files_appended = Append::append_files_to_archive(archive, params.files())?;
         // print file names during append
-        if params.is_verbose(){
+        if params.is_verbose() {
             for file_name in files_appended {
                 println!("{}", file_name.as_str());
             }
@@ -62,9 +59,12 @@ impl TarOperation for Append {
 
 impl Append {
     // TODO: update to include dirs and all files
-    pub(crate) fn append_files_to_archive(mut archive: Archive<File>, files: &[PathBuf]) -> UResult<Vec<String>> { 
+    pub(crate) fn append_files_to_archive(
+        mut archive: Archive<File>,
+        files: &[PathBuf],
+    ) -> UResult<Vec<String>> {
         // attempt to open archive entries and go to the last entry
-        // .last() runs the iterator till None so tar-rs's odd way of 
+        // .last() runs the iterator till None so tar-rs's odd way of
         // creating the iterator using Read/Write is ok
         let end_pos = if let Some(Ok(last_entry)) = archive.entries()?.last() {
             // align to block size boundry
@@ -84,7 +84,7 @@ impl Append {
 
         // seek to end minus 2 blocks for empty
         builder.get_mut().seek(SeekFrom::Start(end_pos))?;
-       
+
         let mut files_appended: Vec<String> = Vec::new();
         for file in files {
             let mut ff = File::open(file)?;

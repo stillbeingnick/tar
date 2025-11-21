@@ -1,6 +1,5 @@
 use crate::errors::TarError;
 use crate::operations::OperationKind;
-use crate::BLOCK_SIZE;
 use clap::ArgMatches;
 use std::path::PathBuf;
 use uucore::error::UResult;
@@ -123,5 +122,5 @@ pub enum TarOption {
     Anchored,
     AtimePreserve { arg: String },
     Verbose,
-    BlockingFactor(u32)
+    BlockingFactor(u32),
 }
