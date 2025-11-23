@@ -66,7 +66,11 @@ pub fn create_archive(archive_path: &Path, files: &[PathBuf], verbose: bool) -> 
 
         // Check if path exists
         if !path.exists() {
-            return Err(TarError::FileNotFound(path.display().to_string()).into());
+            return Err(TarError::FileNotFound(format!(
+                "Cannot stat: No such file or directory: {}",
+                path.display()
+            ))
+            .into());
         }
 
         // If it's a directory, recursively add all contents

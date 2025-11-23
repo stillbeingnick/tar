@@ -112,7 +112,7 @@ fn test_extract_nonexistent_archive() {
     new_ucmd!()
         .args(&["-xf", "nonexistent.tar"])
         .fails()
-        .code_is(2);
+        .code_is(1);
 }
 
 // List operation tests

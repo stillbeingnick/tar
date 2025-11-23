@@ -40,7 +40,13 @@ impl TarOperation for Extract {
 /// - Files cannot be extracted due to I/O or permission errors
 pub fn extract_archive(archive_path: &Path, verbose: bool) -> UResult<()> {
     // Open the archive file
-    let file = File::open(archive_path).map_err(|e| TarError::from_io_error(e, archive_path))?;
+    let file = File::open(archive_path).map_err(|e| {
+        TarError::TarOperationError(format!(
+            "Cannot open archive '{}': {}",
+            archive_path.display(),
+            e
+        ))
+    })?;
 
     // Create Archive instance
     let mut archive = Archive::new(file);
